@@ -1,12 +1,9 @@
 import { connectDB } from "@/dbConfig/dbConfig";
-import User from "@/models/userModel";
 import { NextRequest, NextResponse } from "next/server";
-import bcryptjs from "bcryptjs";
-import jwt from "jsonwebtoken";
 
 connectDB();
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
         // Create a response to send back after the user logs out
 

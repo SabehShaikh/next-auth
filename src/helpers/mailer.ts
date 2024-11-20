@@ -11,14 +11,20 @@ export const sendEmail = async ({ email, emailType, userId }: any) => {
     // If emailType is "VERIFY", update the user's verify token and its expiry in the database
     if (emailType === "VERIFY") {
       await User.findByIdAndUpdate(userId, {
-        verifyToken: hashedToken,
-        verifyTokenExpiry: Date.now() + 3600000, // Token valid for 1 hour
+        // using $set to ensure that the verifyToken and verifyTokenExpiry fields are updated without affecting the rest of the user document.
+
+        $set: {
+          verifyToken: hashedToken,
+          verifyTokenExpiry: Date.now() + 3600000,
+        },
       });
     } else if (emailType === "RESET") {
       // If emailType is "RESET", update the user's forgot password token and its expiry in the database
       await User.findByIdAndUpdate(userId, {
-        forgotPasswordToken: hashedToken,
-        forgotPasswordTokenExpiry: Date.now() + 3600000, // Token valid for 1 hour
+        $set: {
+          forgotPasswordToken: hashedToken,
+          forgotPasswordTokenExpiry: Date.now() + 3600000, // Token valid for 1 hour
+        },
       });
     }
 
@@ -41,7 +47,9 @@ export const sendEmail = async ({ email, emailType, userId }: any) => {
         process.env.DOMAIN
       }/verifyemail?token=${hashedToken}">here</a> to
       ${emailType === "VERIFY" ? "verify your email" : "reset your password"}
-      or copy and paste the link below in your browser. <br> ${process.env.DOMAIN}/verifyemail?token=${hashedToken}</p>`, // HTML body content for email
+      or copy and paste the link below in your browser. <br> ${
+        process.env.DOMAIN
+      }/verifyemail?token=${hashedToken}</p>`, // HTML body content for email
     };
 
     // Send email and return the response
