@@ -37,7 +37,17 @@ export async function POST(request: NextRequest) {
       { message: "Email verified successfully" },
       { status: 200 }
     );
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    // Check if the error is an instance of Error for type safety
+    if (error instanceof Error) {
+      console.error("Verification Error:", error.message); // Log the error message
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Handle unexpected errors that are not instances of Error
+    return NextResponse.json(
+      { error: "An unexpected error occurred" },
+      { status: 500 }
+    );
   }
 }

@@ -1,51 +1,46 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
-// import { useRouter } from "next/router";
 import Link from "next/link";
-import { set } from "mongoose";
 
 export default function VerifyEmailPage() {
-//   const router = useRouter();
-
   const [token, setToken] = useState("");
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState(false);
 
-  const verifyUserEmail = async () => {
+  // Stable function using useCallback to avoid re-creation in useEffect
+  const verifyUserEmail = useCallback(async () => {
     try {
-      await axios.post("api/users/verifyemail", { token });
+      await axios.post("/api/users/verifyemail", { token });
       setVerified(true);
       setError(false);
-    } catch (error: any) {
+    } catch (err: unknown) { // Use 'unknown' instead of 'any'
       setError(true);
-      console.log(error.message);
+      if (axios.isAxiosError(err)) {
+        console.log(err.response?.data?.message || err.message);
+      } else {
+        console.error("An unexpected error occurred:", err);
+      }
     }
-  };
+  }, [token]); // Add 'token' as a dependency
 
   useEffect(() => {
     setError(false);
-    const urlToken = window.location.search.split("=")[1];
-
+    const urlToken = new URLSearchParams(window.location.search).get("token");
     setToken(urlToken || "");
-
-    // Get the token from the query parameters
-    // const { query } = router;
-    // const urlTokenTwo = query.token;
   }, []);
 
   useEffect(() => {
-    setError(false);
     if (token.length > 0) {
       verifyUserEmail();
     }
-  }, [token]);
+  }, [token, verifyUserEmail]); // Include 'verifyUserEmail' in dependencies
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <h1 className="text-4xl">Verify Email</h1>
       <h2 className="p-2 bg-orange-500 text-black">
-        {token ? `${token}` : "no token"}
+        {token ? `${token}` : "No token found"}
       </h2>
 
       {verified && (
@@ -56,7 +51,7 @@ export default function VerifyEmailPage() {
       )}
       {error && (
         <div>
-          <h2 className="text-2xl bg-red-500 text-black">Error</h2>
+          <h2 className="text-2xl bg-red-500 text-black">Verification Failed</h2>
         </div>
       )}
     </div>

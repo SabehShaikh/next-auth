@@ -4,17 +4,17 @@ import { NextRequest, NextResponse } from "next/server";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-connectDB();
+connectDB(); // Connect to the database
 
 export async function POST(request: NextRequest) {
   try {
+    // Parse the request body to get email and password
     const reqBody = await request.json();
     const { email, password } = reqBody;
 
     console.log(reqBody);
 
-    // Check if the user exists by looking for the email in the database
-
+    // Check if the user exists in the database
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     console.log("User exists!");
 
-    // Compare passwords, it returns a boolean: (true or false)
+    // Compare the provided password with the stored hashed password
     const validPassword = await bcryptjs.compare(password, user.password);
 
     if (!validPassword) {
@@ -33,31 +33,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepare the data to be included in the JWT token (like user id and email)
+    // Prepare data for the JWT token
     const tokenData = {
       id: user._id,
       username: user.username,
       email: user.email,
     };
 
-    // Generate a JWT token using the token data and a secret, with an expiration of 1 day
-
+    // Generate a JWT token with a 1-day expiration
     const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET!, {
       expiresIn: "1d",
     });
 
+    // Create the response
     const response = NextResponse.json({
       message: "Login successful",
       success: true,
     });
 
-    // Set the token as a cookie, so it can be used for future requests
+    // Set the token in a cookie (HTTP-only for security)
     response.cookies.set("token", token, {
-      httpOnly: true, // Make sure the cookie is not accessible from JavaScript
+      httpOnly: true,
     });
 
     return response;
-  } catch (error: any) {
+  } catch (error) {
+    // Ensure error type is properly handled and logged
+    console.error("Error occurred:", error); // Log the error for debugging
+
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }

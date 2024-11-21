@@ -18,8 +18,13 @@ export async function GET(request: NextRequest) {
       message: "User found", // Let the client know that we found the user
       data: user, // Send back the user's data without the password
     });
-  } catch (error: any) {
-    // Step 4: If there's an error (e.g., token error, user not found), respond with an error message
+  } catch (error: unknown) {
+    // Step 4: Log the error for debugging if it's an instance of Error
+    if (error instanceof Error) {
+      console.error("Error in GET /me:", error.message);
+    }
+
+    // Step 5: Respond with a generic error message
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }
